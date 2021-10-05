@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Threading;
 
 namespace InstaladorMaster
 {
@@ -48,13 +49,35 @@ namespace InstaladorMaster
             dt = Data.dtConsulta(strCadena);
         }
 
-
         private void btnInstalar_Click(object sender, EventArgs e)
         {
-            btnInstalar.Enabled = false;
-            Ctrl = new clsControlador(dt);
-            Ctrl.vInstalar();
+            vEjecutar();
+        }
 
+        private void vEjecutar()
+        {
+            btnInstalar.Enabled = false;
+            progBar1.Visible = true;
+            progBar1.Value = 10;
+
+            Ctrl = new clsControlador(dt);
+
+            Ctrl.vCrearDataBase();
+            progBar1.Value = 20;
+
+            Ctrl.vEjecutarScripts(1);
+            progBar1.Value = 45;
+
+            Ctrl.vInsertarTablas();
+            progBar1.Value = 70;
+
+            Ctrl.vEjecutarScripts(2);
+            progBar1.Value = 90;
+
+            Ctrl.vGuardarLlaves();
+            progBar1.Value = 100;
+
+            cbSucursales.Text = "Sucursal";
             MessageBox.Show("Creacion Completa...", "Listo..");
         }
 
@@ -62,12 +85,25 @@ namespace InstaladorMaster
         {
             if(cbSucursales.SelectedIndex > 0)
             {
-                vConsulta(cbSucursales.SelectedItem.ToString());
                 btnInstalar.Enabled = true;
+
+                vConsulta(cbSucursales.SelectedItem.ToString());
             }
             else
             {
                 btnInstalar.Enabled = false;
+            }
+        }
+
+        private void tmrConteo_Tick(object sender, EventArgs e)
+        {
+            if (progBar1.Value < 100)
+            {
+                progBar1.Value++;
+            }
+            else
+            {
+                progBar1.Value = 0;
             }
         }
     }

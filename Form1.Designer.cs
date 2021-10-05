@@ -32,14 +32,14 @@ namespace InstaladorMaster
             this.lbSucursal = new System.Windows.Forms.Label();
             this.cbSucursales = new System.Windows.Forms.ComboBox();
             this.btnInstalar = new System.Windows.Forms.Button();
-            this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this.progBar1 = new System.Windows.Forms.ProgressBar();
             this.SuspendLayout();
             // 
             // lbSucursal
             // 
             this.lbSucursal.AutoSize = true;
             this.lbSucursal.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbSucursal.Location = new System.Drawing.Point(102, 68);
+            this.lbSucursal.Location = new System.Drawing.Point(60, 68);
             this.lbSucursal.Name = "lbSucursal";
             this.lbSucursal.Size = new System.Drawing.Size(197, 25);
             this.lbSucursal.TabIndex = 0;
@@ -48,7 +48,7 @@ namespace InstaladorMaster
             // cbSucursales
             // 
             this.cbSucursales.FormattingEnabled = true;
-            this.cbSucursales.Location = new System.Drawing.Point(319, 72);
+            this.cbSucursales.Location = new System.Drawing.Point(293, 72);
             this.cbSucursales.Name = "cbSucursales";
             this.cbSucursales.Size = new System.Drawing.Size(278, 24);
             this.cbSucursales.TabIndex = 1;
@@ -58,7 +58,7 @@ namespace InstaladorMaster
             // btnInstalar
             // 
             this.btnInstalar.Enabled = false;
-            this.btnInstalar.Location = new System.Drawing.Point(192, 242);
+            this.btnInstalar.Location = new System.Drawing.Point(175, 181);
             this.btnInstalar.Name = "btnInstalar";
             this.btnInstalar.Size = new System.Drawing.Size(260, 32);
             this.btnInstalar.TabIndex = 2;
@@ -66,19 +66,20 @@ namespace InstaladorMaster
             this.btnInstalar.UseVisualStyleBackColor = true;
             this.btnInstalar.Click += new System.EventHandler(this.btnInstalar_Click);
             // 
-            // progressBar1
+            // progBar1
             // 
-            this.progressBar1.Location = new System.Drawing.Point(160, 131);
-            this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(100, 23);
-            this.progressBar1.TabIndex = 3;
+            this.progBar1.Location = new System.Drawing.Point(65, 124);
+            this.progBar1.Name = "progBar1";
+            this.progBar1.Size = new System.Drawing.Size(506, 31);
+            this.progBar1.TabIndex = 3;
+            this.progBar1.Visible = false;
             // 
             // frmInstalador
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(740, 393);
-            this.Controls.Add(this.progressBar1);
+            this.ClientSize = new System.Drawing.Size(679, 268);
+            this.Controls.Add(this.progBar1);
             this.Controls.Add(this.btnInstalar);
             this.Controls.Add(this.cbSucursales);
             this.Controls.Add(this.lbSucursal);
@@ -94,7 +95,7 @@ namespace InstaladorMaster
         private System.Windows.Forms.Label lbSucursal;
         private System.Windows.Forms.ComboBox cbSucursales;
         private System.Windows.Forms.Button btnInstalar;
-        private System.Windows.Forms.ProgressBar progressBar1;
+        private System.Windows.Forms.ProgressBar progBar1;
     }
 }
 

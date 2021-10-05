@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -45,15 +46,6 @@ namespace InstaladorMaster.Controllers
             Data = new clsData();
         }
 
-        public void vInstalar()
-        {
-            vCrearDataBase();
-            vEjecutarScripts(1);
-            vInsertarTablas();
-            vEjecutarScripts(2);
-            vGuardarLlaves();
-        }
-
         private void vGeneraInstalador()
         {
             foreach (DataRow dr in dtSucursal.Rows)
@@ -62,7 +54,7 @@ namespace InstaladorMaster.Controllers
             }
         }
 
-        private void vCrearDataBase()
+        public void vCrearDataBase()
         {
             string strDataBase = "";
             foreach (DataRow dr in dtSucursal.Rows)
@@ -76,7 +68,7 @@ namespace InstaladorMaster.Controllers
             Instalador.vEjecutar(strCadena);
         }
 
-        private void vEjecutarScripts(int iScript)
+        public void vEjecutarScripts(int iScript)
         {
             if (iScript == 1)
                 vEjecutarScriptTablas();
@@ -109,7 +101,7 @@ namespace InstaladorMaster.Controllers
             }
         }
 
-        private void vInsertarTablas()
+        public void vInsertarTablas()
         {
             string[] strCampos;
             try
@@ -233,6 +225,5 @@ namespace InstaladorMaster.Controllers
                 string strError = ex.ToString();
             }
         }
-
     }
 }
