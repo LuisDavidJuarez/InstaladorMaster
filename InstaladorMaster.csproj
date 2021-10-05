@@ -85,6 +85,16 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="scripts\fnListaDescuentos.txt" />
+    <Content Include="scripts\sp_CreateTempTable.txt" />
+    <Content Include="scripts\sp_GetSucursal.txt" />
+    <Content Include="scripts\sp_Sincronizacion.txt" />
+    <Content Include="scripts\tablas.txt" />
+    <Content Include="scripts\xpBusquedaArticulo.txt" />
+    <Content Include="scripts\xpBusquedaAutocompletar.txt" />
+    <Content Include="scripts\xpBusquedaSugeridos.txt" />
+    <Content Include="scripts\xpConsultaMostradorArticulo.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

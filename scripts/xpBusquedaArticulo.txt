@@ -1,0 +1,288 @@
+CREATE PROC [dbo].[xpBusquedaArticulo]
+		--@empresa VARCHAR(5),
+		@sucursal INT,
+		@opcion INT,
+		@texto varchar(50)
+		--@codigo VARCHAR(20) = NULL,
+		--@articulo VARCHAR(20) = NULL,
+		--@descripcion VARCHAR(50) = NULL,
+		--@cliente VARCHAR(20) = NULL
+AS BEGIN
+       -- Obtener Region de la Sucursal
+	DECLARE @region VARCHAR(30),
+            @descuentos VARCHAR(50),
+		    @condicion VARCHAR(50),
+			@empresa VARCHAR(5),
+			@articulo VARCHAR(20),
+			@cliente VARCHAR(20) = NULL
+	
+	DECLARE @Arts TABLE (Articulo VARCHAR(20))
+	DECLARE @tbl_Consulta TABLE (Codigo VARCHAR(20), Gen_Pat VARCHAR(1), Articulo VARCHAR(20), Descripcion1 VARCHAR(100), PrecioLista MONEY,
+								 Precio2 MONEY, Familia VARCHAR(50), DescuentosCascada FLOAT, EnSucursal INT, PoliticaExclusiva BIT,
+								 /*Cantidad MONEY NULL, Monto MONEY NULL,*/ ID INT, Tipo VarChar(23), Estatus VARCHAR(20), 
+								 SustanciaActiva VARCHAR(100), PrecioConDescuento MONEY)
+	DECLARE @tbl_Consulta_Final TABLE (Codigo VARCHAR(20), Gen_Pat VARCHAR(1), Articulo VARCHAR(20), Descripcion1 VARCHAR(100), PrecioLista MONEY, 
+									   Precio2 MONEY,  Familia VARCHAR(50), DescuentosCascada FLOAT, EnSucursal INT, PoliticaExclusiva BIT, 
+									   /*Cantidad MONEY NULL, Monto MONEY NULL,*/ ID INT, Tipo VarChar(23), PrecioConDescuento MONEY, 
+									   Cantidad FLOAT, Monto MONEY, IVA FLOAT, IEEPS FLOAT, Costo MONEY, Estatus VARCHAR(20), 
+									   SustanciaActiva VARCHAR(100))
+       
+	SELECT @region = Region, @condicion = NULL, @empresa = 'OFB'
+	  FROM Sucursal  WITH (NOLOCK) WHERE Sucursal = @sucursal
+		
+	IF @cliente IN ('','NULL') SELECT @cliente = NULL
+    
+	--Búsqueda Fonética (Campo Descripción)
+	IF @opcion = 1
+	BEGIN
+		IF rtrim(ISNULL(@texto,'')) <> '' 
+		BEGIN			
+			INSERT @Arts
+			SELECT Articulo
+			  FROM Art WITH (NOLOCK)
+			 WHERE Descripcion1 LIKE '%' + @texto + '%'
+			   AND (Familia LIKE '%GENERICO%' OR Familia LIKE '%PATENTE%')
+			   AND Grupo NOT IN('CADUCADO')
+
+			INSERT @Arts
+			SELECT Articulo
+			  FROM Art WITH (NOLOCK)
+			 WHERE DIFFERENCE(Descripcion1,@texto) = 4
+			   AND SOUNDEX(Descripcion1) = SOUNDEX(@texto)
+			   AND Articulo NOT IN (SELECT Articulo FROM @Arts)
+			   AND (Familia LIKE '%GENERICO%' OR Familia LIKE '%PATENTE%')
+			   AND Grupo NOT IN('CADUCADO')
+		END
+	END
+
+	--Búsqueda por Sustancia Activa
+	IF @opcion = 2
+	BEGIN
+		DECLARE @ArtSustanciaActiva TABLE (Articulo VARCHAR(20), SustanciaActiva VARCHAR(100))
+
+		INSERT INTO @ArtSustanciaActiva (Articulo,SustanciaActiva)
+		SELECT Articulo,
+			   SUBSTRING(A.SustanciaActiva 
+					,LEN(A.SustanciaActiva) - (LEN(LTRIM(REPLACE(A.SustanciaActiva, '"', ' ')) + '|') - 1) + 1 --start_pos
+					,LEN(LTRIM(REPLACE(A.SustanciaActiva, '"', ' '))) --length
+			  ) AS SustanciaActiva
+		  FROM Art AS A WITH(NOLOCK)
+		 WHERE A.SustanciaActiva != ''
+		   AND Grupo NOT IN('CADUCADO')
+
+		INSERT INTO @Arts
+		SELECT Articulo
+		  FROM @ArtSustanciaActiva
+		 WHERE SustanciaActiva LIKE '%' + @texto + '%'
+	END
+	
+	-- Búsqueda por Artículo o Código Ean
+	IF @opcion = 3
+	BEGIN 
+		SELECT @articulo = CB.Cuenta
+          FROM CB WITH (NOLOCK)
+		  LEFT JOIN Art AS A WITH (NOLOCK) ON A.Articulo = CB.Cuenta
+         WHERE CB.Codigo = @texto
+		   AND CB.TipoCuenta = 'Articulos'
+		   AND Grupo NOT IN('CADUCADO')
+
+		IF rtrim(ISNULL(@articulo,'')) <> ''
+		BEGIN
+			INSERT @Arts VALUES(@articulo)
+		END
+		ELSE
+		BEGIN
+			INSERT INTO @Arts
+			SELECT Articulo
+			  FROM Art WITH (NOLOCK)
+			 WHERE Articulo = @texto
+			   AND Grupo NOT IN('CADUCADO')
+		END
+	END
+
+    -- InfoBusqueda Articulo        
+    IF EXISTS(SELECT * FROM @Arts)--NULLIF(@articulo,'') IS NOT NULL
+    BEGIN
+		INSERT INTO @tbl_Consulta
+        SELECT x.*, (x.PrecioLista*(100-x.DescuentosCascada))/100 as PrecioConDescuento
+        FROM
+        (
+        SELECT  '' AS Codigo, --MAX(CB.Codigo) AS Codigo,
+                CASE WHEN Art.Familia LIKE '%GENERICO%' THEN 'G'
+                        ELSE
+                                CASE WHEN Art.Familia LIKE '%PATENTE%' THEN 'P'
+                                ELSE NULL END
+                END AS Gen_Pat,
+                Art.Articulo AS Articulo, 
+				Art.Descripcion1 AS Descripcion1,
+                Art.PrecioLista AS PrecioLista, --MAX(Art.PrecioLista)
+                Art.Precio2 AS Precio2,
+                Art.Familia AS Familia,
+                ROUND(dbo.fnListaDescuentos(REPLACE((SELECT CONVERT(varchar,monto) as [data()]
+                                        FROM Precio P WITH (NOLOCK) INNER JOIN PrecioD D WITH (NOLOCK) ON P.ID = D.ID
+                                        WHERE P.Estatus = 'ACTIVA'
+										AND (P.ConVigencia = 0  OR (P.ConVigencia = 1   AND GETDATE() BETWEEN P.FechaD AND P.FechaA))
+										AND (P.NivelEmpresa=0   OR (P.NivelEmpresa=1    AND P.Empresa = @empresa))
+										--AND (P.NivelArticulo=0  OR (P.NivelArticulo=1   AND P.Articulo = @Articulo))
+										AND (P.NivelArticulo=0  OR (P.NivelArticulo=1   AND P.Articulo = Art.Articulo))
+										AND (P.NivelArtGrupo=0  OR (P.NivelArtGrupo=1   AND P.ArtGrupo = Art.Grupo))
+										AND (P.NivelArtCat=0    OR (P.NivelArtCat=1     AND P.ArtCat = Art.Categoria))
+										AND (P.NivelArtFam=0    OR (P.NivelArtFam=1     AND P.ArtFam = Art.Familia))
+										AND (P.NivelArtLinea=0  OR (P.NivelArtLinea=1   AND P.ArtLinea = Art.Linea))
+										AND (P.NivelSucursal=0  OR (P.NivelSucursal=1   AND P.Sucursal = @sucursal))
+                                        AND (P.NivelRegion=0    OR (P.NivelRegion=1     AND P.Region = @region))
+										AND (P.NivelCliente=0   OR (P.NivelCliente=1    AND P.Cliente = @cliente ))
+										AND (P.NivelCondicion=0 OR (P.NivelCondicion=1  AND Condicion = @condicion))
+										AND P.ListaPrecios IN ('1','2','Todas')
+										AND P.Nivel = 'Normal'
+										AND P.Tipo IN ('% Descuento','Precio=Precio 2+[%]')
+                                        FOR XML PATH ('')
+                                        ), ' ', ','),','),2) as DescuentosCascada,
+                0 as EnSucursal,
+                ISNULL((					SELECT	TOP 1 1
+                                        FROM Precio P WITH (NOLOCK) INNER JOIN PrecioD D WITH (NOLOCK) ON P.ID = D.ID
+                                        WHERE P.Estatus = 'ACTIVA'
+										AND (P.ConVigencia = 0  OR (P.ConVigencia = 1   AND GETDATE() BETWEEN P.FechaD AND P.FechaA))
+										AND (P.NivelEmpresa=0   OR (P.NivelEmpresa=1    AND P.Empresa = @empresa))
+										--AND (P.NivelArticulo=0  OR (P.NivelArticulo=1   AND P.Articulo = @Articulo))
+										AND (P.NivelArticulo=0  OR (P.NivelArticulo=1   AND P.Articulo = Art.Articulo))
+										AND (P.NivelArtGrupo=0  OR (P.NivelArtGrupo=1   AND P.ArtGrupo = Art.Grupo))
+										AND (P.NivelArtCat=0    OR (P.NivelArtCat=1     AND P.ArtCat = Art.Categoria))
+										AND (P.NivelArtFam=0    OR (P.NivelArtFam=1     AND P.ArtFam = Art.Familia))
+										AND (P.NivelArtLinea=0  OR (P.NivelArtLinea=1   AND P.ArtLinea = Art.Linea))
+										AND (P.NivelSucursal=0  OR (P.NivelSucursal=1   AND P.Sucursal = @sucursal))
+                                        AND (P.NivelRegion=0    OR (P.NivelRegion=1     AND P.Region = @region))
+										AND (P.NivelCliente=0   OR (P.NivelCliente=1    AND P.Cliente = @cliente ))
+										AND (P.NivelCondicion=0 OR (P.NivelCondicion=1  AND Condicion = @condicion))
+										AND P.ListaPrecios IN ('1','2','Todas')
+										AND P.Nivel <> 'Normal'
+										/*AND P.Tipo = '% Descuento'*/), 0) PoliticaExclusiva,
+            --   0 Cant, 0 Monto,
+										(SELECT	TOP 1 P.ID
+                                        FROM Precio P WITH (NOLOCK) INNER JOIN PrecioD D WITH (NOLOCK) ON P.ID = D.ID
+                                        WHERE P.Estatus = 'ACTIVA'
+										AND (P.ConVigencia = 0  OR (P.ConVigencia = 1   AND GETDATE() BETWEEN P.FechaD AND P.FechaA))
+										AND (P.NivelEmpresa=0   OR (P.NivelEmpresa=1    AND P.Empresa = @empresa))
+										--AND (P.NivelArticulo=0  OR (P.NivelArticulo=1   AND P.Articulo = @Articulo))
+										AND (P.NivelArticulo=0  OR (P.NivelArticulo=1   AND P.Articulo = Art.Articulo))
+										AND (P.NivelArtGrupo=0  OR (P.NivelArtGrupo=1   AND P.ArtGrupo = Art.Grupo))
+										AND (P.NivelArtCat=0    OR (P.NivelArtCat=1     AND P.ArtCat = Art.Categoria))
+										AND (P.NivelArtFam=0    OR (P.NivelArtFam=1     AND P.ArtFam = Art.Familia))
+										AND (P.NivelArtLinea=0  OR (P.NivelArtLinea=1   AND P.ArtLinea = Art.Linea))
+										AND (P.NivelSucursal=0  OR (P.NivelSucursal=1   AND P.Sucursal = @sucursal))
+                                        AND (P.NivelRegion=0    OR (P.NivelRegion=1     AND P.Region = @region))
+										AND (P.NivelCliente=0   OR (P.NivelCliente=1    AND P.Cliente = @cliente ))
+										AND (P.NivelCondicion=0 OR (P.NivelCondicion=1  AND Condicion = @condicion))
+										AND P.ListaPrecios IN ('1','2','Todas')
+										AND P.Nivel <> 'Normal' ORDER BY P.ID) ID,
+										(SELECT	TOP 1 P.Tipo
+                                        FROM Precio P WITH (NOLOCK) INNER JOIN PrecioD D WITH (NOLOCK) ON P.ID = D.ID
+                                        WHERE P.Estatus = 'ACTIVA'
+										AND (P.ConVigencia = 0  OR (P.ConVigencia = 1   AND GETDATE() BETWEEN P.FechaD AND P.FechaA))
+										AND (P.NivelEmpresa=0   OR (P.NivelEmpresa=1    AND P.Empresa = @empresa))
+										--AND (P.NivelArticulo=0  OR (P.NivelArticulo=1   AND P.Articulo = @Articulo))
+										AND (P.NivelArticulo=0  OR (P.NivelArticulo=1   AND P.Articulo = Art.Articulo))
+										AND (P.NivelArtGrupo=0  OR (P.NivelArtGrupo=1   AND P.ArtGrupo = Art.Grupo))
+										AND (P.NivelArtCat=0    OR (P.NivelArtCat=1     AND P.ArtCat = Art.Categoria))
+										AND (P.NivelArtFam=0    OR (P.NivelArtFam=1     AND P.ArtFam = Art.Familia))
+										AND (P.NivelArtLinea=0  OR (P.NivelArtLinea=1   AND P.ArtLinea = Art.Linea))
+										AND (P.NivelSucursal=0  OR (P.NivelSucursal=1   AND P.Sucursal = @sucursal))
+                                        AND (P.NivelRegion=0    OR (P.NivelRegion=1     AND P.Region = @region))
+										AND (P.NivelCliente=0   OR (P.NivelCliente=1    AND P.Cliente = @cliente ))
+										AND (P.NivelCondicion=0 OR (P.NivelCondicion=1  AND Condicion = @condicion))
+										AND P.ListaPrecios IN ('1','2','Todas')
+										AND P.Nivel <> 'Normal' ORDER BY P.ID) Tipo,
+										Art.Estatus AS Estatus, Art.SustanciaActiva AS SustanciaActiva
+        FROM Art WITH (NOLOCK)
+        WHERE Art.Articulo IN (SELECT Articulo FROM @Arts)
+        ) AS x
+            
+		INSERT @tbl_Consulta_Final(Codigo,Gen_Pat,Articulo,Descripcion1,PrecioLista,Familia,DescuentosCascada,EnSucursal,
+			   PoliticaExclusiva,ID,Tipo,PrecioConDescuento,Cantidad,Monto,Costo,Estatus,SustanciaActiva)
+		SELECT (SELECT MAX(RTRIM(CB.Codigo)) FROM CB WHERE CB.Cuenta = C.Articulo) AS Codigo, Gen_Pat, C.Articulo, Descripcion1, 
+			   --CASE WHEN PoliticaExclusiva=1 AND C.Tipo = 'Precio' THEN PD.Monto ELSE PrecioLista END PrecioLista, 
+			   --PrecioLista,
+			   CASE WHEN Tipo = 'Precio=Precio 2+[%]' THEN Precio2 ELSE PrecioLista END AS PrecioLista, Familia, DescuentosCascada,
+			   EnSucursal, PoliticaExclusiva, C.ID , Tipo, 
+			   --CASE WHEN PoliticaExclusiva=1 AND C.Tipo = 'Precio' THEN PD.Monto ELSE PrecioConDescuento END PrecioConDescuento, 
+			   CASE WHEN PoliticaExclusiva=1 AND C.Tipo = 'Precio' THEN PD.Monto 
+					ELSE (CASE WHEN PoliticaExclusiva = 1 AND C.Tipo = 'Precio=Precio 2+[%]' THEN (Precio2 - (Precio2 * ABS(PD.Monto)/100)) 
+							   ELSE PrecioConDescuento 
+						  END)
+				    END PrecioConDescuento, 
+			   ISNULL(PD.Cantidad,1) Cantidad, 
+			   ABS(PD.Monto) Monto, 0 AS Costo, --Codigo, Gen_Pat, Articulo, Descripcion1, PrecioLista, Familia, DescuentosCascada, EnSucursal, PrecioConDescuento, PoliticaExclusiva, Cantidad, Monto
+			   C.Estatus AS Estatus, C.SustanciaActiva AS SustanciaActiva --Estatus, SustanciaActiva
+		  FROM @tbl_Consulta C 
+		  LEFT JOIN PrecioD PD WITH (NOLOCK) ON C.ID = PD.ID AND C.PoliticaExclusiva = 1 AND --C.Tipo = 'Precio'
+					C.Tipo IN ('Precio','Precio=Precio 2+[%]')
+		 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+          DECLARE @ZonaImpuesto VARCHAR(30),@Porcentaje FLOAT,@IVA FLOAT,@IEEPS FLOAT,@PrecioListaIEEPS MONEY,@PrecioListaIVA MONEY
+
+		  SELECT @ZonaImpuesto = ZonaImpuesto FROM Sucursal WHERE Sucursal = @sucursal
+		  SELECT @Porcentaje   = (Porcentaje/100) + 1 FROM ZonaImp WHERE Zona = @ZonaImpuesto
+		
+		  UPDATE T SET T.IVA   = O.Impuesto1,
+		               T.IEEPS = O.Impuesto2
+		  FROM @tbl_Consulta_Final AS T
+		  INNER JOIN Art AS O ON T.Articulo = O.Articulo
+
+
+		  UPDATE @tbl_Consulta_Final SET PrecioLista        = CASE WHEN IEEPS > 0 THEN (PrecioLista  * ((IEEPS/100) + 1)) ELSE PrecioLista END
+		  UPDATE @tbl_Consulta_Final SET PrecioConDescuento = CASE WHEN IEEPS > 0 THEN (PrecioConDescuento  * ((IEEPS/100) + 1)) ELSE PrecioConDescuento END
+		  UPDATE @tbl_Consulta_Final SET PrecioLista        = CASE WHEN IVA   > 0 THEN (PrecioLista  * @Porcentaje)  ELSE PrecioLista END
+		  UPDATE @tbl_Consulta_Final SET PrecioConDescuento = CASE WHEN IVA   > 0 THEN (PrecioConDescuento  * @Porcentaje)  ELSE PrecioConDescuento END
+		  
+		  --Búsqueda Fonética (Campo Descripción)
+		  IF @opcion = 1
+		  BEGIN
+			DECLARE @tbl_Consulta_Final_Fonetica 
+			        TABLE (Codigo VARCHAR(20), Gen_Pat VARCHAR(1), Articulo VARCHAR(20), Descripcion1 VARCHAR(100), PrecioLista MONEY, Familia VARCHAR(50), 
+						   DescuentosCascada FLOAT, EnSucursal INT, PoliticaExclusiva BIT, ID INT, Tipo VarChar(23),
+						   PrecioConDescuento MONEY, Cantidad FLOAT,Monto MONEY, MasParecido int, Costo MONEY, Estatus VARCHAR(20), 
+						   SustanciaActiva VARCHAR(100))
+			
+			INSERT @tbl_Consulta_Final_Fonetica
+			SELECT Codigo,Gen_Pat,Articulo,Descripcion1,PrecioLista,Familia,DescuentosCascada,EnSucursal,PoliticaExclusiva,ID,Tipo,
+		           PrecioConDescuento,Cantidad,Monto,1,Costo,Estatus,SustanciaActiva
+			  FROM @tbl_Consulta_Final 
+			 WHERE Descripcion1 LIKE '%' + @texto + '%'
+
+			INSERT @tbl_Consulta_Final_Fonetica
+			SELECT Codigo,Gen_Pat,Articulo,Descripcion1,PrecioLista,Familia,DescuentosCascada,EnSucursal,PoliticaExclusiva,ID,Tipo,
+		           PrecioConDescuento,Cantidad,Monto,2,Costo,Estatus,SustanciaActiva
+		      FROM @tbl_Consulta_Final
+             WHERE DIFFERENCE(Descripcion1,@texto) = 4
+               AND SOUNDEX(Descripcion1) = SOUNDEX(@texto)
+               AND Articulo NOT IN (SELECT Articulo FROM @tbl_Consulta_Final_Fonetica)
+
+			SELECT Codigo,A.Articulo,Descripcion1 AS Descripcion,Costo,PrecioLista AS Precio,DescuentosCascada AS Descuento,PrecioConDescuento,
+			       'n/a' AS Margen,'n/a' AS Existencia,Gen_Pat,Familia,Estatus,SustanciaActiva
+			  FROM @tbl_Consulta_Final_Fonetica AS A
+			 ORDER BY MasParecido DESC,Descripcion ASC
+		  END
+		  ELSE
+		  BEGIN
+			-- Búsqueda por Sustancia Activa o Padecimiento
+			IF @opcion = 2
+			BEGIN
+			  SELECT Codigo,A.Articulo,Descripcion1 AS Descripcion,Costo,PrecioLista AS Precio,DescuentosCascada AS Descuento,PrecioConDescuento,
+					 'n/a' AS Margen,'n/a' AS Existencia,Gen_Pat,Familia,Estatus,SustanciaActiva
+				FROM @tbl_Consulta_Final AS A
+			   ORDER BY Descripcion DESC
+			END
+			ELSE
+			BEGIN
+				-- Búsqueda por Artículo o Código Ean
+				SELECT Codigo,A.Articulo,Descripcion1 AS Descripcion,Costo,PrecioLista AS Precio,DescuentosCascada AS Descuento,PrecioConDescuento,
+					   'n/a' AS Margen,'n/a' AS Existencia,Gen_Pat,Familia,Estatus,SustanciaActiva
+				  FROM @tbl_Consulta_Final AS A
+			END
+		  END
+	   	-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+       END
+	   ELSE BEGIN
+			--SELECT TOP 0 '' Codigo, '' Articulo, '' Descripcion1, 0 eNSucursal, '' Gen_Pat, CAST(0 AS FLOAT) precioLista, CAST(0 AS FLOAT) PrecioConDescuento, '' fAMILIA, CAST(0 AS FLOAT) DescuentosCascada
+			SELECT *, 0.0 Cantidad, 0.0 Monto FROM @tbl_Consulta
+	   END
+END

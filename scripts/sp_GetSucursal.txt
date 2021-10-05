@@ -1,0 +1,11 @@
+CREATE PROCEDURE sp_GetSucursal
+@gateway  VARCHAR(20)
+
+AS
+BEGIN
+
+SELECT RTRIM(LTRIM(Id))AS Id,RTRIM(LTRIM(Gateway)) AS Gateway,RTRIM(LTRIM(Sucursal))AS Sucursal 
+	FROM ConfiguracionGateway
+WHERE Gateway = @gateway
+
+END

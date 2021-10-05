@@ -17,7 +17,7 @@ namespace InstaladorMaster.Controllers
         clsInstalador Instalador;
         clsData Data;
         string strCadena;
-        private string strLigaScripts = @"C:\Users\ljuarez\Documents\GitHub\CotizadorWebAPI\CotizadorWebAPI\scripts\";
+        private string strLigaScripts = @"C:\Users\ljuarez\Documents\GitHub\InstaladorMaster\InstaladorMaster\scripts\";
         DataTable dt, dtSucursal;
 
         string[] strTablasAntes = { "[Opesys].[REPLICAS].[Art]",

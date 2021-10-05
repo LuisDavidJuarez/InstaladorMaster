@@ -1,0 +1,29 @@
+CREATE PROCEDURE [dbo].[sp_CreateTempTable] 
+	-- Add the parameters for the stored procedure here
+	@Action varchar(10),
+	@BD varchar (50),
+	@Table varchar(25)
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+    -- Insert statements for procedure here
+	DECLARE @Schema VARCHAR(MAX)
+
+	IF OBJECT_ID('Tmp' + @Table, 'U') IS NOT NULL 
+	BEGIN 
+		SET @Schema = 'DROP TABLE TMP' + @Table
+		EXEC (@Schema)
+	END
+
+	IF @Action = 'CREATE'
+	BEGIN
+		SET @Schema = 'SELECT TOP 0 * ' +
+					  '  INTO Tmp' + @Table +
+					  '  FROM [' + @BD + '].dbo.' + @Table
+
+		EXEC (@Schema)
+	END
+END
