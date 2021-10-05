@@ -1,0 +1,13 @@
+C:\Users\ljuarez\Documents\GitHub\InstaladorMaster\InstaladorMaster\obj\Debug\InstaladorMaster.csproj.AssemblyReference.cache
+C:\Users\ljuarez\Documents\GitHub\InstaladorMaster\InstaladorMaster\obj\Debug\InstaladorMaster.frmInstalador.resources
+C:\Users\ljuarez\Documents\GitHub\InstaladorMaster\InstaladorMaster\obj\Debug\InstaladorMaster.Properties.Resources.resources
+C:\Users\ljuarez\Documents\GitHub\InstaladorMaster\InstaladorMaster\obj\Debug\InstaladorMaster.csproj.GenerateResource.cache
+C:\Users\ljuarez\Documents\GitHub\InstaladorMaster\InstaladorMaster\obj\Debug\InstaladorMaster.csproj.CoreCompileInputs.cache
+C:\Users\ljuarez\Documents\GitHub\InstaladorMaster\InstaladorMaster\bin\Debug\InstaladorMaster.exe.config
+C:\Users\ljuarez\Documents\GitHub\InstaladorMaster\InstaladorMaster\bin\Debug\InstaladorMaster.exe
+C:\Users\ljuarez\Documents\GitHub\InstaladorMaster\InstaladorMaster\bin\Debug\InstaladorMaster.pdb
+C:\Users\ljuarez\Documents\GitHub\InstaladorMaster\InstaladorMaster\obj\Debug\InstaladorMaster.exe
+C:\Users\ljuarez\Documents\GitHub\InstaladorMaster\InstaladorMaster\obj\Debug\InstaladorMaster.pdb
+C:\Users\ljuarez\Documents\GitHub\InstaladorMaster\InstaladorMaster\bin\Debug\Newtonsoft.Json.dll
+C:\Users\ljuarez\Documents\GitHub\InstaladorMaster\InstaladorMaster\bin\Debug\Newtonsoft.Json.xml
+C:\Users\ljuarez\Documents\GitHub\InstaladorMaster\InstaladorMaster\obj\Debug\InstaladorMaster.csproj.CopyComplete
