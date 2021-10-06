@@ -96,10 +96,7 @@ namespace InstaladorMaster
             try
             {
                 Ctrl = new clsControlador(dt);
-
-                Ctrl.vGuardarLlaves();//5%
-
-                int iProgress = 0;
+                
                 string mensaje = "Creando Base de Datos...";
                 Thread.Sleep(2000);
                 for (int i = 1; i <= 5; i++)
@@ -109,31 +106,26 @@ namespace InstaladorMaster
                         case 1:
                             Ctrl.vCrearDataBase();//5%
                             mensaje = "Base de Datos Creada, Se crearan Tablas...";
-                            iProgress = 5;
                             break;
 
                         case 2:
                             Ctrl.vEjecutarScripts(1);//10%
                             mensaje = "Tablas Creadas, se Insertaran Datos...";
-                            iProgress = 10;
                             break;
 
                         case 3:
                             Ctrl.vInsertarTablas();//70%
                             mensaje = "Datos Insertados, se Crearan funciones y Procedimientos...";
-                            iProgress = 70;
                             break;
 
                         case 4:
                             Ctrl.vEjecutarScripts(2);//10%
                             mensaje = "Funciones y Procedimientos Creadas, Generando Llaves de Acceso...";
-                            iProgress = 10;
                             break;
 
                         case 5:
-                            Ctrl.vEjecutarScripts(2);//10%
+                            Ctrl.vGuardarLlaves();//5%
                             mensaje = "Funciones y Procedimientos Creadas, Generando Llaves de Acceso...";
-                            iProgress = 10;
                             break;
                     }
 
