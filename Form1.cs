@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Threading;
+using System.ComponentModel;
 
 namespace InstaladorMaster
 {
@@ -51,34 +52,27 @@ namespace InstaladorMaster
 
         private void btnInstalar_Click(object sender, EventArgs e)
         {
-            vEjecutar();
+            btnInstalar.Enabled = false;
+            barraProgreso.Visible = true;
+            lbMensaje.Visible = true;
+            bwEjecutar.RunWorkerAsync();
         }
 
         private void vEjecutar()
         {
-            btnInstalar.Enabled = false;
-            progBar1.Visible = true;
-            progBar1.Value = 10;
 
             Ctrl = new clsControlador(dt);
 
             Ctrl.vCrearDataBase();
-            progBar1.Value = 20;
 
             Ctrl.vEjecutarScripts(1);
-            progBar1.Value = 45;
 
             Ctrl.vInsertarTablas();
-            progBar1.Value = 70;
 
             Ctrl.vEjecutarScripts(2);
-            progBar1.Value = 90;
 
             Ctrl.vGuardarLlaves();
-            progBar1.Value = 100;
 
-            cbSucursales.Text = "Sucursal";
-            MessageBox.Show("Creacion Completa...", "Listo..");
         }
 
         private void cbSucursales_SelectedIndexChanged(object sender, EventArgs e)
@@ -86,6 +80,8 @@ namespace InstaladorMaster
             if(cbSucursales.SelectedIndex > 0)
             {
                 btnInstalar.Enabled = true;
+                barraProgreso.Visible = false;
+                lbMensaje.Visible = false;
 
                 vConsulta(cbSucursales.SelectedItem.ToString());
             }
@@ -95,16 +91,86 @@ namespace InstaladorMaster
             }
         }
 
-        private void tmrConteo_Tick(object sender, EventArgs e)
+        private void bwEjecutar_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
-            if (progBar1.Value < 100)
+            try
             {
-                progBar1.Value++;
+                Ctrl = new clsControlador(dt);
+
+                Ctrl.vGuardarLlaves();//5%
+
+                int iProgress = 0;
+                string mensaje = "Creando Base de Datos...";
+                Thread.Sleep(2000);
+                for (int i = 1; i <= 5; i++)
+                {
+                    switch(i)
+                    {
+                        case 1:
+                            Ctrl.vCrearDataBase();//5%
+                            mensaje = "Base de Datos Creada, Se crearan Tablas...";
+                            iProgress = 5;
+                            break;
+
+                        case 2:
+                            Ctrl.vEjecutarScripts(1);//10%
+                            mensaje = "Tablas Creadas, se Insertaran Datos...";
+                            iProgress = 10;
+                            break;
+
+                        case 3:
+                            Ctrl.vInsertarTablas();//70%
+                            mensaje = "Datos Insertados, se Crearan funciones y Procedimientos...";
+                            iProgress = 70;
+                            break;
+
+                        case 4:
+                            Ctrl.vEjecutarScripts(2);//10%
+                            mensaje = "Funciones y Procedimientos Creadas, Generando Llaves de Acceso...";
+                            iProgress = 10;
+                            break;
+
+                        case 5:
+                            Ctrl.vEjecutarScripts(2);//10%
+                            mensaje = "Funciones y Procedimientos Creadas, Generando Llaves de Acceso...";
+                            iProgress = 10;
+                            break;
+                    }
+
+                    Thread.Sleep(2000);
+                    ((BackgroundWorker)sender).ReportProgress((int)(i * 100d/ 5));
+                    this.Invoke((MethodInvoker)(() => setMessage(mensaje)));
+                }
             }
-            else
+            catch (Exception exp)
             {
-                progBar1.Value = 0;
+                MessageBox.Show("bwEjecutar_DoWork():Error" + exp.Message, "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                this.bwEjecutar.CancelAsync();
             }
+        }
+
+        private void setMessage(string strMensaje)
+        {
+            lbMensaje.Text = strMensaje;
+        }
+
+        private void bwEjecutar_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
+        {
+            setMessage("Instalacion Exitosa...");
+            cbSucursales.Text = "Sucursal";
+            MessageBox.Show("Creacion Completa...", "Listo..");
+        }
+
+        private void bwEjecutar_ProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e)
+        {
+            barraProgreso.Value = e.ProgressPercentage;
+        }
+
+        private void frmInstalador_Load(object sender, EventArgs e)
+        {
+            barraProgreso.Style = ProgressBarStyle.Continuous;
+            //
         }
     }
 }

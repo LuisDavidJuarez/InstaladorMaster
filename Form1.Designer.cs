@@ -32,7 +32,9 @@ namespace InstaladorMaster
             this.lbSucursal = new System.Windows.Forms.Label();
             this.cbSucursales = new System.Windows.Forms.ComboBox();
             this.btnInstalar = new System.Windows.Forms.Button();
-            this.progBar1 = new System.Windows.Forms.ProgressBar();
+            this.barraProgreso = new System.Windows.Forms.ProgressBar();
+            this.bwEjecutar = new System.ComponentModel.BackgroundWorker();
+            this.lbMensaje = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // lbSucursal
@@ -47,18 +49,18 @@ namespace InstaladorMaster
             // 
             // cbSucursales
             // 
+            this.cbSucursales.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbSucursales.FormattingEnabled = true;
             this.cbSucursales.Location = new System.Drawing.Point(293, 72);
             this.cbSucursales.Name = "cbSucursales";
             this.cbSucursales.Size = new System.Drawing.Size(278, 24);
             this.cbSucursales.TabIndex = 1;
-            this.cbSucursales.Text = "Sucursal";
             this.cbSucursales.SelectedIndexChanged += new System.EventHandler(this.cbSucursales_SelectedIndexChanged);
             // 
             // btnInstalar
             // 
             this.btnInstalar.Enabled = false;
-            this.btnInstalar.Location = new System.Drawing.Point(175, 181);
+            this.btnInstalar.Location = new System.Drawing.Point(175, 198);
             this.btnInstalar.Name = "btnInstalar";
             this.btnInstalar.Size = new System.Drawing.Size(260, 32);
             this.btnInstalar.TabIndex = 2;
@@ -66,25 +68,45 @@ namespace InstaladorMaster
             this.btnInstalar.UseVisualStyleBackColor = true;
             this.btnInstalar.Click += new System.EventHandler(this.btnInstalar_Click);
             // 
-            // progBar1
+            // barraProgreso
             // 
-            this.progBar1.Location = new System.Drawing.Point(65, 124);
-            this.progBar1.Name = "progBar1";
-            this.progBar1.Size = new System.Drawing.Size(506, 31);
-            this.progBar1.TabIndex = 3;
-            this.progBar1.Visible = false;
+            this.barraProgreso.Location = new System.Drawing.Point(65, 141);
+            this.barraProgreso.Name = "barraProgreso";
+            this.barraProgreso.Size = new System.Drawing.Size(506, 31);
+            this.barraProgreso.TabIndex = 3;
+            this.barraProgreso.Visible = false;
+            // 
+            // bwEjecutar
+            // 
+            this.bwEjecutar.WorkerReportsProgress = true;
+            this.bwEjecutar.WorkerSupportsCancellation = true;
+            this.bwEjecutar.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bwEjecutar_DoWork);
+            this.bwEjecutar.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.bwEjecutar_ProgressChanged);
+            this.bwEjecutar.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bwEjecutar_RunWorkerCompleted);
+            // 
+            // lbMensaje
+            // 
+            this.lbMensaje.AutoSize = true;
+            this.lbMensaje.Location = new System.Drawing.Point(62, 121);
+            this.lbMensaje.Name = "lbMensaje";
+            this.lbMensaje.Size = new System.Drawing.Size(147, 17);
+            this.lbMensaje.TabIndex = 4;
+            this.lbMensaje.Text = "Espere un momento...";
+            this.lbMensaje.Visible = false;
             // 
             // frmInstalador
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(679, 268);
-            this.Controls.Add(this.progBar1);
+            this.Controls.Add(this.lbMensaje);
+            this.Controls.Add(this.barraProgreso);
             this.Controls.Add(this.btnInstalar);
             this.Controls.Add(this.cbSucursales);
             this.Controls.Add(this.lbSucursal);
             this.Name = "frmInstalador";
             this.Text = "instalador Master";
+            this.Load += new System.EventHandler(this.frmInstalador_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -95,7 +117,9 @@ namespace InstaladorMaster
         private System.Windows.Forms.Label lbSucursal;
         private System.Windows.Forms.ComboBox cbSucursales;
         private System.Windows.Forms.Button btnInstalar;
-        private System.Windows.Forms.ProgressBar progBar1;
+        private System.Windows.Forms.ProgressBar barraProgreso;
+        private System.ComponentModel.BackgroundWorker bwEjecutar;
+        private System.Windows.Forms.Label lbMensaje;
     }
 }
 
