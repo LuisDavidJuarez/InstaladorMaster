@@ -17,27 +17,39 @@ namespace InstaladorMaster.Controllers
         clsInstalador Instalador;
         clsData Data;
         string strCadena;
-        private string strLigaScripts = @"C:\Users\ljuarez\Documents\GitHub\InstaladorMaster\InstaladorMaster\scripts\";
+        string strIp = "";
+        //private string strLigaScripts = @"C:\Users\ljuarez\Documents\GitHub\InstaladorMaster\InstaladorMaster\scripts\";
+        private string strLigaScripts = @"\\192.168.13.30\c$\Instalador\Scripts\";
         DataTable dt, dtSucursal;
 
         string[] strTablasAntes = { "[Opesys].[REPLICAS].[Art]",
-                                        "[Opesys].[dbo].[ConfiguracionGateway]",
                                         "[Opesys].[REPLICAS].[CB]",
                                         "[Opesys].[REPLICAS].[Politica]",
                                         "[Opesys].[REPLICAS].[Precio]",
                                         "[Opesys].[REPLICAS].[PrecioD]",
                                         "[Opesys].[REPLICAS].[Sucursal]",
-                                        "[Opesys].[REPLICAS].[ZonaImp]" };
-
+                                        "[Opesys].[REPLICAS].[ZonaImp]",
+                                        "[OFB4600v1].[dbo].[ArtCostoEmpresa]",
+                                        "[OFB4600v1].[dbo].[ArtDisponible]"};
 
         string[] strTablasDespues = { "[dbo].[Art]",
-                                        "[dbo].[ConfiguracionGateway]",
                                         "[dbo].[CB]",
                                         "[dbo].[Politica]",
                                         "[dbo].[Precio]",
                                         "[dbo].[PrecioD]",
                                         "[dbo].[Sucursal]",
-                                        "[dbo].[ZonaImp]" };
+                                        "[dbo].[ZonaImp]",
+                                        "[dbo].[ArtCostoEmpresa]",
+                                        "[dbo].[ArtDisponible]"};
+
+        string[] strArchivos = { "fnListaDescuentos.txt",
+                                     "xpBusquedaSugeridos.txt",
+                                     "xpBusquedaArticulo.txt",
+                                     "sp_Sincronizacion.txt",
+                                     "sp_CreateTempTable.txt",
+                                     "xpBusquedaAutocompletar.txt",
+                                     "xpConsultaMostradorArticulo.txt",
+                                     "xpArticulosDisponibles.txt"};
 
         public clsControlador(DataTable dtSeleccionada)
         {
@@ -50,7 +62,8 @@ namespace InstaladorMaster.Controllers
         {
             foreach (DataRow dr in dtSucursal.Rows)
             {
-                Instalador = new clsInstalador(dr["Base"].ToString() + "-TEST", dr["IP"].ToString(), dr["Usuario"].ToString(), dr["Password"].ToString());
+                strIp = dr["IP"].ToString();
+                Instalador = new clsInstalador(dr["Base"].ToString() + "-TEST", strIp, dr["Usuario"].ToString(), dr["Password"].ToString());
             }
         }
 
@@ -59,8 +72,9 @@ namespace InstaladorMaster.Controllers
             string strDataBase = "";
             foreach (DataRow dr in dtSucursal.Rows)
             {
+                strIp = dr["IP"].ToString();
                 strDataBase = dr["Base"].ToString() + "-TEST";
-                Instalador = new clsInstalador("master", dr["IP"].ToString(), dr["Usuario"].ToString(), dr["Password"].ToString());
+                Instalador = new clsInstalador("master", strIp, dr["Usuario"].ToString(), dr["Password"].ToString());
             }
             strCadena = "IF db_id('" + strDataBase + "') IS NULL  " +
                 "CREATE DATABASE[" + strDataBase + "];";
@@ -86,15 +100,6 @@ namespace InstaladorMaster.Controllers
 
         private void vEjecutarScrips()
         {
-            string[] strArchivos = { "fnListaDescuentos.txt",
-                                     "xpBusquedaSugeridos.txt",
-                                     "xpBusquedaArticulo.txt",
-                                     "sp_Sincronizacion.txt",
-                                     "sp_CreateTempTable.txt",
-                                     "xpBusquedaAutocompletar.txt",
-                                     "sp_GetSucursal.txt",
-                                     "xpConsultaMostradorArticulo.txt"};
-
             foreach (string strArchivo in strArchivos)
             {
                 Instalador.vEjecutar(strObtenerScript(strArchivo));
@@ -106,7 +111,7 @@ namespace InstaladorMaster.Controllers
             string[] strCampos;
             try
             {
-                for (int i = 0; i < 8; i++)
+                for (int i = 0; i < strArchivos.Length; i++)
                 {
                     if(bInsertar(strTablasDespues[i]))
                     {
@@ -196,7 +201,7 @@ namespace InstaladorMaster.Controllers
 
         public void vGuardarLlaves()
         {
-            string strPath = @"C:\CotizadorWeb";
+            string strPath = @"\\"+ strIp + @"\c$\CotizadorWeb";
             try
             {
                 Directory.CreateDirectory(strPath);

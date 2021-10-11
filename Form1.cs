@@ -39,13 +39,11 @@ namespace InstaladorMaster
 
         private void vConsulta (string strCampo)
         {
-            if(strCampo == "All")
+            strCadena = "select ID, Sucursal, IP, Base, Usuario, Password from [REPLICAS].[SucursalTransferencia]";
+
+            if (strCampo != "All")
             {
-                strCadena = "select ID, Sucursal, IP, Base, Usuario, Password from [REPLICAS].[SucursalTransferencia]";
-            }
-            else
-            {
-                strCadena = "select ID, Sucursal, IP, Base, Usuario, Password from [REPLICAS].[SucursalTransferencia] where Sucursal=" + strCampo;
+                strCadena += " where Sucursal = " + strCampo;
             }
             dt = Data.dtConsulta(strCadena);
         }
