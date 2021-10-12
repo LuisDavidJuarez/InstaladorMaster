@@ -45,6 +45,10 @@ namespace InstaladorMaster
             {
                 strCadena += " where Sucursal = " + strCampo;
             }
+            else
+            {
+                strCadena += " order by Sucursal";
+            }
             dt = Data.dtConsulta(strCadena);
         }
 

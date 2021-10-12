@@ -64,6 +64,9 @@ namespace InstaladorMaster.Controllers
             {
                 strIp = dr["IP"].ToString();
                 Instalador = new clsInstalador(dr["Base"].ToString() + "-TEST", strIp, dr["Usuario"].ToString(), dr["Password"].ToString());
+
+                //strIp = @"DESARROLLO-05\SQLEXPRESS";
+                //Instalador = new clsInstalador("COTL-23-TEST", strIp, "sa", "123");
             }
         }
 
@@ -76,6 +79,11 @@ namespace InstaladorMaster.Controllers
                 strDataBase = dr["Base"].ToString() + "-TEST";
                 Instalador = new clsInstalador("master", strIp, dr["Usuario"].ToString(), dr["Password"].ToString());
             }
+
+            //strIp = @"DESARROLLO-05\SQLEXPRESS";
+            //strDataBase = "COTL-23-TEST";
+            //Instalador = new clsInstalador("master", strIp, "sa", "123");
+
             strCadena = "IF db_id('" + strDataBase + "') IS NULL  " +
                 "CREATE DATABASE[" + strDataBase + "];";
 
