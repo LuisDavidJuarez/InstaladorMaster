@@ -65,7 +65,7 @@ namespace InstaladorMaster.Controllers
                 strIp = dr["IP"].ToString();
                 Instalador = new clsInstalador(dr["Base"].ToString() + "-TEST", strIp, dr["Usuario"].ToString(), dr["Password"].ToString());
 
-                //strIp = @"DESARROLLO-05\SQLEXPRESS";
+                //strIp = "192.168.13.136";
                 //Instalador = new clsInstalador("COTL-23-TEST", strIp, "sa", "123");
             }
         }
@@ -80,7 +80,7 @@ namespace InstaladorMaster.Controllers
                 Instalador = new clsInstalador("master", strIp, dr["Usuario"].ToString(), dr["Password"].ToString());
             }
 
-            //strIp = @"DESARROLLO-05\SQLEXPRESS";
+            //strIp = "192.168.13.136";
             //strDataBase = "COTL-23-TEST";
             //Instalador = new clsInstalador("master", strIp, "sa", "123");
 
