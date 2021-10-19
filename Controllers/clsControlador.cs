@@ -16,31 +16,29 @@ namespace InstaladorMaster.Controllers
     {
         clsInstalador Instalador;
         clsData Data;
-        string strCadena;
+        string strCadena, strRespuesta;
         string strIp = "";
         //private string strLigaScripts = @"C:\Users\ljuarez\Documents\GitHub\InstaladorMaster\InstaladorMaster\scripts\";
         private string strLigaScripts = @"\\192.168.13.30\c$\Instalador\Scripts\";
         DataTable dt, dtSucursal;
 
         string[] strTablasAntes = { "[Opesys].[REPLICAS].[Art]",
+                                        "[Opesys].[REPLICAS].[ArtCostoEmpresa]",
                                         "[Opesys].[REPLICAS].[CB]",
                                         "[Opesys].[REPLICAS].[Politica]",
                                         "[Opesys].[REPLICAS].[Precio]",
                                         "[Opesys].[REPLICAS].[PrecioD]",
                                         "[Opesys].[REPLICAS].[Sucursal]",
-                                        "[Opesys].[REPLICAS].[ZonaImp]",
-                                        "[OFB4600v1].[dbo].[ArtCostoEmpresa]",
-                                        "[OFB4600v1].[dbo].[ArtDisponible]"};
+                                        "[Opesys].[REPLICAS].[ZonaImp]"};
 
         string[] strTablasDespues = { "[dbo].[Art]",
+                                        "[dbo].[ArtCostoEmpresa]",
                                         "[dbo].[CB]",
                                         "[dbo].[Politica]",
                                         "[dbo].[Precio]",
                                         "[dbo].[PrecioD]",
                                         "[dbo].[Sucursal]",
-                                        "[dbo].[ZonaImp]",
-                                        "[dbo].[ArtCostoEmpresa]",
-                                        "[dbo].[ArtDisponible]"};
+                                        "[dbo].[ZonaImp]"};
 
         string[] strArchivos = { "fnListaDescuentos.txt",
                                      "xpBusquedaSugeridos.txt",
@@ -48,8 +46,7 @@ namespace InstaladorMaster.Controllers
                                      "sp_Sincronizacion.txt",
                                      "sp_CreateTempTable.txt",
                                      "xpBusquedaAutocompletar.txt",
-                                     "xpConsultaMostradorArticulo.txt",
-                                     "xpArticulosDisponibles.txt"};
+                                     "xpConsultaMostradorArticulo.txt"};
 
         public clsControlador(DataTable dtSeleccionada)
         {
@@ -65,7 +62,7 @@ namespace InstaladorMaster.Controllers
                 strIp = dr["IP"].ToString();
                 Instalador = new clsInstalador(dr["Base"].ToString() + "-TEST", strIp, dr["Usuario"].ToString(), dr["Password"].ToString());
 
-                //strIp = "192.168.13.136";
+                //strIp = "192.168.13.158";
                 //Instalador = new clsInstalador("COTL-23-TEST", strIp, "sa", "123");
             }
         }
@@ -80,7 +77,7 @@ namespace InstaladorMaster.Controllers
                 Instalador = new clsInstalador("master", strIp, dr["Usuario"].ToString(), dr["Password"].ToString());
             }
 
-            //strIp = "192.168.13.136";
+            //strIp = "192.168.13.158";
             //strDataBase = "COTL-23-TEST";
             //Instalador = new clsInstalador("master", strIp, "sa", "123");
 
@@ -119,18 +116,22 @@ namespace InstaladorMaster.Controllers
             string[] strCampos;
             try
             {
-                for (int i = 0; i < strArchivos.Length; i++)
+                for (int i = 0; i < strTablasAntes.Length; i++)
                 {
                     if(bInsertar(strTablasDespues[i]))
                     {
                         strCadena = "Select * from " + strTablasAntes[i] + ";";
-                        dt = Data.dtConsulta(strCadena);
+                        dt = dtLimpia(Data.dtConsulta(strCadena));
+
+                            strCadena = "Select UltimaSincronizacion FROM [Opesys].[REPLICAS].[SincronizacionFechaTabla] where Tabla = '" + 
+                            strLimpiarBD(strTablasDespues[i]) + "';";
+                        strRespuesta = Data.strConsulta(strCadena);
 
                         strCampos = strObtenerColumnas(dt, strTablasDespues[i]);
                         Instalador.vInsertarBulk(strCampos, dt);
 
                         strCadena = "Insert into [dbo].[SincronizacionFechaTabla] (Tabla, UltimaSincronizacion)" +
-                            "values ('" + strLimpiarBD(strTablasDespues[i]) + "', CURRENT_TIMESTAMP)";
+                            "values ('" + strLimpiarBD(strTablasDespues[i]) + "', '"+ strRespuesta + "')";
                         Instalador.vEjecutar(strCadena);
                     }
                 }
@@ -139,6 +140,20 @@ namespace InstaladorMaster.Controllers
             {
                 string strerror = ex.Message;
             }
+        }
+
+        private DataTable dtLimpia(DataTable dt)
+        {
+            if (dt.Columns.Contains("FechaAlta"))
+                dt.Columns.Remove("FechaAlta");
+
+            if (dt.Columns.Contains("FechaUltMod"))
+                dt.Columns.Remove("FechaUltMod");
+
+            if (dt.Columns.Contains("UNIQUEIDENTIFIER"))
+                dt.Columns.Remove("UNIQUEIDENTIFIER");
+
+            return dt;
         }
 
         private string strLimpiarBD(string strBD)
@@ -194,7 +209,7 @@ namespace InstaladorMaster.Controllers
             lstResultado.Add(strTabla);
             foreach (DataColumn dc in dt.Columns)
             {
-                lstResultado.Add(dc.ColumnName);
+                    lstResultado.Add(dc.ColumnName);
             }
 
             return lstResultado.ToArray();
