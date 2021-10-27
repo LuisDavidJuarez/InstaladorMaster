@@ -16,7 +16,7 @@ namespace InstaladorMaster.Models
         {
             //Data Source=192.168.23.130;Initial Catalog=master;User ID=sa;Password=23
             strConexion = @"Data Source=" + strIPAsignada + ";Initial Catalog=" + strDataBase + ";" +
-                "Persist Security Info=True;User ID="+ strUser + ";Password=" + strPassword + ";";
+                "Persist Security Info=True;User ID=" + strUser + ";Password=" + strPassword + ";";
         }
 
         private SqlConnection GetConnection()

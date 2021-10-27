@@ -60,23 +60,6 @@ namespace InstaladorMaster
             bwEjecutar.RunWorkerAsync();
         }
 
-        private void vEjecutar()
-        {
-
-            Ctrl = new clsControlador(dt);
-
-            Ctrl.vCrearDataBase();
-
-            Ctrl.vEjecutarScripts(1);
-
-            Ctrl.vInsertarTablas();
-
-            Ctrl.vEjecutarScripts(2);
-
-            Ctrl.vGuardarLlaves();
-
-        }
-
         private void cbSucursales_SelectedIndexChanged(object sender, EventArgs e)
         {
             if(cbSucursales.SelectedIndex > 0)
@@ -111,7 +94,7 @@ namespace InstaladorMaster
                             break;
 
                         case 2:
-                            Ctrl.vEjecutarScripts(1);//10%
+                            Ctrl.vGeneraTablas();//10%
                             mensaje = "Tablas Creadas, se Insertaran Datos...";
                             break;
 
@@ -121,7 +104,7 @@ namespace InstaladorMaster
                             break;
 
                         case 4:
-                            Ctrl.vEjecutarScripts(2);//10%
+                            Ctrl.vEjecutarScripts();//10%
                             mensaje = "Funciones y Procedimientos Creadas, Generando Llaves de Acceso...";
                             break;
 
