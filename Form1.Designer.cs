@@ -51,6 +51,8 @@ namespace InstaladorMaster
             // 
             this.cbSucursales.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbSucursales.FormattingEnabled = true;
+            this.cbSucursales.Items.AddRange(new object[] {
+            "Seleccione"});
             this.cbSucursales.Location = new System.Drawing.Point(293, 72);
             this.cbSucursales.Name = "cbSucursales";
             this.cbSucursales.Size = new System.Drawing.Size(278, 24);

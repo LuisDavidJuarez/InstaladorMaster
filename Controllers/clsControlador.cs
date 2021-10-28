@@ -34,7 +34,7 @@ namespace InstaladorMaster.Controllers
             foreach (DataRow dr in dtSucursal.Rows)
             {
                 strIp = dr["IP"].ToString();
-                Instalador = new clsInstalador(dr["Base"].ToString() + "-TEST", strIp, dr["Usuario"].ToString(), dr["Password"].ToString());
+                Instalador = new clsInstalador(dr["Base"].ToString(), strIp, dr["Usuario"].ToString(), dr["Password"].ToString());
 
                 //strIp = "192.168.13.158";
                 //Instalador = new clsInstalador("COTL-23-TEST", strIp, "sa", "123");
@@ -47,12 +47,12 @@ namespace InstaladorMaster.Controllers
             foreach (DataRow dr in dtSucursal.Rows)
             {
                 strIp = dr["IP"].ToString();
-                strDataBase = dr["Base"].ToString() + "-TEST";
+                strDataBase = dr["Base"].ToString();
                 Instalador = new clsInstalador("master", strIp, dr["Usuario"].ToString(), dr["Password"].ToString());
             }
 
             //strIp = "192.168.13.158";
-            //strDataBase = "COTL-23-TEST";
+            //strDataBase = "COTL-23";
             //Instalador = new clsInstalador("master", strIp, "sa", "123");
 
             strCadena = "IF db_id('" + strDataBase + "') IS NULL  " +
