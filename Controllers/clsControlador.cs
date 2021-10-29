@@ -37,7 +37,7 @@ namespace InstaladorMaster.Controllers
                 Instalador = new clsInstalador(dr["Base"].ToString(), strIp, dr["Usuario"].ToString(), dr["Password"].ToString());
 
                 //strIp = "192.168.13.158";
-                //Instalador = new clsInstalador("COTL-23-TEST", strIp, "sa", "123");
+                //Instalador = new clsInstalador("COTL-23", strIp, "sa", "123");
             }
         }
 
