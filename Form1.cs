@@ -58,6 +58,7 @@ namespace InstaladorMaster
             barraProgreso.Visible = true;
             lbMensaje.Visible = true;
             bwEjecutar.RunWorkerAsync();
+            cbSucursales.Enabled = false;
         }
 
         private void cbSucursales_SelectedIndexChanged(object sender, EventArgs e)
@@ -137,6 +138,7 @@ namespace InstaladorMaster
             setMessage("Instalacion Exitosa...");
             cbSucursales.Text = "Sucursal";
             MessageBox.Show("Creacion Completa...", "Listo..");
+            cbSucursales.Enabled = true;
         }
 
         private void bwEjecutar_ProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e)
